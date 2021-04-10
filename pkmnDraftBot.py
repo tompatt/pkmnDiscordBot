@@ -14,6 +14,7 @@ import sys
 import os
 import time
 import copy
+import yaml
 
 # GLOBALS
 MAIN_DATA = {}
@@ -22,7 +23,8 @@ IMPLEMENTED_COMMANDS = ["!help", "!mystery", "!register", "!draft", "!undraft", 
 MESSAGE_BUFFER = asyncio.Queue()
 
 # User needs to put their token here!
-token = 'TOKEN HERE!'
+config = yaml.safe_load(open("./config.yml"))
+token = config['token']
 client = discord.Client()
 
 
@@ -669,31 +671,31 @@ def command_supply(msg):
             if thisType in pokemon["type"]:
                 if pokemon["owner"] is not None:
 
-                    if pokemon["tier"] is "1":
+                    if pokemon["tier"] == "1":
                         totalSupply += 4.0
-                    elif pokemon["tier"] is "2":
+                    elif pokemon["tier"] == "2":
                         totalSupply += 3.0
-                    elif pokemon["tier"] is "3":
+                    elif pokemon["tier"] == "3":
                         totalSupply += 2.25
-                    elif pokemon["tier"] is "4":
+                    elif pokemon["tier"] == "4":
                         totalSupply += 0.75
-                    elif pokemon["tier"] is "5":
+                    elif pokemon["tier"] == "5":
                         totalSupply += 0.15
 
                 else:
-                    if pokemon["tier"] is "1":
+                    if pokemon["tier"] == "1":
                         totalSupply += 4.0
                         stillAvailable += 4.0
-                    elif pokemon["tier"] is "2":
+                    elif pokemon["tier"] == "2":
                         totalSupply += 3.0
                         stillAvailable += 3.0
-                    elif pokemon["tier"] is "3":
+                    elif pokemon["tier"] == "3":
                         totalSupply += 2.25
                         stillAvailable += 2.25
-                    elif pokemon["tier"] is "4":
+                    elif pokemon["tier"] == "4":
                         totalSupply += 0.75
                         stillAvailable += 0.75
-                    elif pokemon["tier"] is "5":
+                    elif pokemon["tier"] == "5":
                         totalSupply += 0.15
                         stillAvailable+= 0.15
 
@@ -786,31 +788,31 @@ def command_recommendation(msg):
             if thisType in pokemon["type"]:
                 if pokemon["owner"] is not None:
 
-                    if pokemon["tier"] is "1":
+                    if pokemon["tier"] == "1":
                         totalSupply += 4.0
-                    elif pokemon["tier"] is "2":
+                    elif pokemon["tier"] == "2":
                         totalSupply += 3.0
-                    elif pokemon["tier"] is "3":
+                    elif pokemon["tier"] == "3":
                         totalSupply += 2.25
-                    elif pokemon["tier"] is "4":
+                    elif pokemon["tier"] == "4":
                         totalSupply += 0.75
-                    elif pokemon["tier"] is "5":
+                    elif pokemon["tier"] == "5":
                         totalSupply += 0.15
 
                 else:
-                    if pokemon["tier"] is "1":
+                    if pokemon["tier"] == "1":
                         totalSupply += 4.0
                         stillAvailable += 4.0
-                    elif pokemon["tier"] is "2":
+                    elif pokemon["tier"] == "2":
                         totalSupply += 3.0
                         stillAvailable += 3.0
-                    elif pokemon["tier"] is "3":
+                    elif pokemon["tier"] == "3":
                         totalSupply += 2.25
                         stillAvailable += 2.25
-                    elif pokemon["tier"] is "4":
+                    elif pokemon["tier"] == "4":
                         totalSupply += 0.75
                         stillAvailable += 0.75
-                    elif pokemon["tier"] is "5":
+                    elif pokemon["tier"] == "5":
                         totalSupply += 0.15
                         stillAvailable+= 0.15
 
@@ -1684,7 +1686,8 @@ async def message_consumer_task():
     global MESSAGE_BUFFER
 
     await client.wait_until_ready()
-    await client.change_presence(game=discord.Game(name="Type \'!help\'"))
+    game = discord.Game("Type \'!help\'")
+    await client.change_presence(status=discord.Status.idle, activity=game)
     counter = 0
     # channel = discord.Object(id='lab')
     # channel = discord.Object(id="315272164632690688")
@@ -1692,7 +1695,7 @@ async def message_consumer_task():
     # tempUser = discord.User(id="205108954873856009")
     # await client.send_message(tempUser, "hey")
 
-    while not client.is_closed:
+    while not client.is_closed():
 
         if counter % 720 == 0:
             # print(str(counter))
@@ -1710,7 +1713,8 @@ async def message_consumer_task():
             response = authorizeMessage(message)
 #             print("Response:" + """
 # """ + response)
-            await client.send_message(message.channel, response)
+            # await client.send_message(message.channel, response) OLD
+            await message.channel.send(response)
 
             await asyncio.sleep(1)
 
@@ -1750,21 +1754,12 @@ async def on_message(msg):
     if hasattr(msg, 'content'):
         if msg.content is not None:
             if msg.content[0] == "!":
-                if msg.channel.is_private == False:
-                    # Ignore messages that aren't DMs
-                    if msg.author.id == "274745931167956992":
-                        await client.send_message(msg.channel, "<3")
-                    else:
-                        await client.send_message(msg.channel, "Please speak with me in a direct message, I'm shy!")
-                else:
-                    # The user submitted a potentially valid message in a DM, let's do some processing.
+                # The user submitted a potentially valid message in a DM, let's do some processing.
 
-                    await MESSAGE_BUFFER.put(msg)
+                await MESSAGE_BUFFER.put(msg)
 
-                    response = "*Processing...*"
-                    await client.send_message(msg.channel, response)
-
-
+                response = "*Processing...*"
+                await msg.channel.send(response)
 
 
 def main():
